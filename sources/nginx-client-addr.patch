@@ -1,0 +1,67 @@
+--- a/src/http/ngx_http_variables.c	2017-07-11 13:24:09.000000000 +0000
++++ b/src/http/ngx_http_variables.c	2017-09-07 06:19:42.541481914 +0000
+@@ -55,6 +55,8 @@
+     ngx_http_variable_value_t *v, uintptr_t data);
+ static ngx_int_t ngx_http_variable_binary_remote_addr(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data);
++static ngx_int_t ngx_http_variable_client_addr(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data);
+ static ngx_int_t ngx_http_variable_remote_addr(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data);
+ static ngx_int_t ngx_http_variable_remote_port(ngx_http_request_t *r,
+@@ -192,6 +194,8 @@
+     { ngx_string("binary_remote_addr"), NULL,
+       ngx_http_variable_binary_remote_addr, 0, 0, 0 },
+ 
++    { ngx_string("client_addr"), NULL, ngx_http_variable_client_addr, 0, 0, 0 },
++
+     { ngx_string("remote_addr"), NULL, ngx_http_variable_remote_addr, 0, 0, 0 },
+ 
+     { ngx_string("remote_port"), NULL, ngx_http_variable_remote_port, 0, 0, 0 },
+@@ -1241,6 +1245,46 @@
+ }
+ 
+ 
++static ngx_int_t
++ngx_http_variable_client_addr(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data)
++{
++    ngx_uint_t          n;
++    ngx_table_elt_t   **h;
++    u_char             *xff;
++    size_t              xfflen,tok;
++
++    n = r->headers_in.x_forwarded_for.nelts;
++    h = r->headers_in.x_forwarded_for.elts;
++
++    if (h == NULL) {
++        v->len = r->connection->addr_text.len;
++        v->valid = 1;
++        v->no_cacheable = 0;
++        v->not_found = 0;
++        v->data = r->connection->addr_text.data;
++
++        return NGX_OK;
++    }
++    else {
++        xff = h[0]->value.data;
++        xfflen = h[0]->value.len;
++        for (tok = 0; tok < xfflen ; tok++) {
++            if (xff[tok] == ',') {
++                break;
++            }
++        }
++        v->len = tok;
++        v->valid = 1;
++        v->no_cacheable = 0;
++        v->not_found = 0;
++        v->data = xff;
++
++        return NGX_OK;
++    }
++}
++
++
+ static ngx_int_t
+ ngx_http_variable_remote_addr(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data)

@@ -1,0 +1,98 @@
+--- a/nginx.spec	2017-09-07 03:35:46.936615570 +0000
++++ b/nginx.spec	2017-09-07 09:06:32.617345888 +0000
+@@ -30,6 +30,15 @@
+ Source12:          nginx.conf
+ Source13:          nginx-upgrade
+ Source14:          nginx-upgrade.8
++Source21:          ngx_devel_kit.tar.gz
++Source22:          lua-nginx-module.tar.gz
++Source23:          echo-nginx-module.tar.gz
++Source24:          headers-more-nginx-module.tar.gz
++Source25:          naxsi.tar.gz
++Source26:          naxsi_core.rules
++Source27:          nginx-module-vts.tar.gz
++Source28:          redis2-nginx-module.tar.gz
++Source29:          nginx-rtmp-module.tar.gz
+ Source100:         index.html
+ Source101:         poweredby.png
+ Source102:         nginx-logo.png
+@@ -41,6 +50,10 @@
+ # removes -Werror in upstream build scripts.  -Werror conflicts with
+ # -D_FORTIFY_SOURCE=2 causing warnings to turn into errors.
+ Patch0:            nginx-auto-cc-gcc.patch
++Patch1:            nginx-client-addr.patch
++# https://github.com/intaro/nginx-image-filter-watermark.git
++# https://github.com/tyler/image_filter_module
++Patch2:            nginx-image-filter.patch
+ 
+ %if 0%{?with_gperftools}
+ BuildRequires:     gperftools-devel
+@@ -56,6 +69,10 @@
+ Requires:          nginx-all-modules = %{epoch}:%{version}-%{release}
+ %endif
+ 
++Requires:          luajit
++%if 0%{?with_gperftools}
++Requires:          gperftools
++%endif
+ Requires:          openssl
+ Requires:          pcre
+ Requires(pre):     nginx-filesystem
+@@ -170,7 +187,17 @@
+ 
+ %prep
+ %setup -q
++%setup -T -D -a 21
++%setup -T -D -a 22
++%setup -T -D -a 23
++%setup -T -D -a 24
++%setup -T -D -a 25
++%setup -T -D -a 27
++%setup -T -D -a 28
++%setup -T -D -a 29
+ %patch0 -p0
++%patch1 -p1 -b .orig
++%patch2 -p1 -b .orig
+ cp %{SOURCE200} %{SOURCE210} %{SOURCE10} %{SOURCE12} .
+ 
+ %if 0%{?rhel} > 0 && 0%{?rhel} < 8
+@@ -212,6 +239,7 @@
+     --with-http_xslt_module=dynamic \
+     --with-http_image_filter_module=dynamic \
+     --with-http_geoip_module=dynamic \
++    --with-http_slice_module \
+     --with-http_sub_module \
+     --with-http_dav_module \
+     --with-http_flv_module \
+@@ -235,6 +263,14 @@
+     --with-google_perftools_module \
+ %endif
+     --with-debug \
++    --add-module=%{_builddir}/nginx-%{version}/lua-nginx-module \
++    --add-module=%{_builddir}/nginx-%{version}/echo-nginx-module \
++    --add-module=%{_builddir}/nginx-%{version}/naxsi/naxsi_src \
++    --add-module=%{_builddir}/nginx-%{version}/ngx_devel_kit \
++    --add-module=%{_builddir}/nginx-%{version}/headers-more-nginx-module \
++    --add-module=%{_builddir}/nginx-%{version}/nginx-module-vts \
++    --add-module=%{_builddir}/nginx-%{version}/redis2-nginx-module \
++    --add-module=%{_builddir}/nginx-%{version}/nginx-rtmp-module \
+     --with-cc-opt="%{optflags} $(pcre-config --cflags)" \
+     --with-ld-opt="$RPM_LD_FLAGS -Wl,-E" # so the perl module finds its symbols
+ 
+@@ -267,6 +303,8 @@
+ 
+ install -p -m 0644 ./nginx.conf \
+     %{buildroot}%{_sysconfdir}/nginx
++install -p -m 0644 %{SOURCE26} \
++    %{buildroot}%{_sysconfdir}/nginx
+ install -p -m 0644 %{SOURCE100} \
+     %{buildroot}%{_datadir}/nginx/html
+ install -p -m 0644 %{SOURCE101} %{SOURCE102} \
+@@ -379,6 +417,7 @@
+ %config(noreplace) %{_sysconfdir}/nginx/mime.types.default
+ %config(noreplace) %{_sysconfdir}/nginx/nginx.conf
+ %config(noreplace) %{_sysconfdir}/nginx/nginx.conf.default
++%config(noreplace) %{_sysconfdir}/nginx/naxsi_core.rules
+ %config(noreplace) %{_sysconfdir}/nginx/scgi_params
+ %config(noreplace) %{_sysconfdir}/nginx/scgi_params.default
+ %config(noreplace) %{_sysconfdir}/nginx/uwsgi_params
