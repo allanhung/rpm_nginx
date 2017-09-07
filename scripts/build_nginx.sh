@@ -18,6 +18,7 @@ yum install -y gperftools-devel openssl-devel pcre-devel zlib-devel GeoIP-devel 
 bash /usr/local/src/build/get_nginx.sh
 
 # compile nginx
+/bin/cp -rf /usr/local/src/sources/* $RPMBUILDROOT/SOURCES
+cd $RPMBUILDROOT/SPECS
 patch -p1 < $RPMBUILDROOT/SOURCES/nginx-spec.patch
-cp -r /usr/local/src/sources/* $RPMBUILDROOT/SOURCES
 rpmbuild -bb $RPMBUILDROOT/SPECS/nginx.spec
