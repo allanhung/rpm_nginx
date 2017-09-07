@@ -9,4 +9,5 @@ How to Build
 ::
 
     git clone https://github.com/allanhung/rpm_nginx
-    docker run --name=nginx_build --rm -ti -v $(pwd)/rpms:/root/rpmbuild/RPMS -v $(pwd)/sources:/usr/local/src/sources -v $(pwd)/scripts:/usr/local/src/build /bin/bash -c "/usr/local/src/build/build_nginx.sh"
+    cd rpm_nginx
+    docker run --name=nginx_build --rm -ti -v $(pwd)/rpms:/root/rpmbuild/RPMS -v $(pwd)/sources:/usr/local/src/sources -v $(pwd)/scripts:/usr/local/src/build centos /bin/bash -c "/usr/local/src/build/build_nginx.sh"
