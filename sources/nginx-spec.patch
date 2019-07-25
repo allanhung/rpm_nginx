@@ -1,33 +1,37 @@
---- a/nginx.spec	2017-09-07 03:35:46.936615570 +0000
-+++ b/nginx.spec	2017-09-07 09:06:32.617345888 +0000
-@@ -30,6 +30,15 @@
+--- a/nginx.spec	2019-05-30 13:28:20.000000000 +0000
++++ b/nginx.spec	2019-07-25 06:44:56.992474000 +0000
+@@ -37,6 +37,19 @@
  Source12:          nginx.conf
  Source13:          nginx-upgrade
  Source14:          nginx-upgrade.8
-+Source21:          ngx_devel_kit.tar.gz
-+Source22:          lua-nginx-module.tar.gz
-+Source23:          echo-nginx-module.tar.gz
-+Source24:          headers-more-nginx-module.tar.gz
-+Source25:          naxsi.tar.gz
-+Source26:          naxsi_core.rules
-+Source27:          nginx-module-vts.tar.gz
++Source21:          ngx_image_thumb.tar.gz
++Source22:          nginx-http-rdns.tar.gz
++Source23:          nginx-rtmp-module.tar.gz
++Source24:          ngx_devel_kit.tar.gz
++Source25:          lua-nginx-module.tar.gz
++Source26:          echo-nginx-module.tar.gz
++Source27:          headers-more-nginx-module.tar.gz
 +Source28:          redis2-nginx-module.tar.gz
-+Source29:          nginx-rtmp-module.tar.gz
- Source100:         index.html
- Source101:         poweredby.png
++Source29:          naxsi.tar.gz
++Source30:          naxsi_core.rules
++Source31:          nginx-module-vts.tar.gz
++Source32:          nginx-lua-prometheus.tar.gz
++Source33:          stream-lua-nginx-module.tar.gz
  Source102:         nginx-logo.png
-@@ -41,6 +50,10 @@
- # removes -Werror in upstream build scripts.  -Werror conflicts with
- # -D_FORTIFY_SOURCE=2 causing warnings to turn into errors.
- Patch0:            nginx-auto-cc-gcc.patch
-+Patch1:            nginx-client-addr.patch
+ Source103:         404.html
+ Source104:         50x.html
+@@ -50,6 +63,10 @@
+ # downstream patch - changing logs permissions to 664 instead
+ # previous 644
+ Patch2:            nginx-1.12.1-logs-perm.patch
++Patch3:            nginx-client-addr.patch
 +# https://github.com/intaro/nginx-image-filter-watermark.git
 +# https://github.com/tyler/image_filter_module
-+Patch2:            nginx-image-filter.patch
++Patch4:            nginx-image-filter.patch
  
+ BuildRequires:     gcc
  %if 0%{?with_gperftools}
- BuildRequires:     gperftools-devel
-@@ -56,6 +69,10 @@
+@@ -67,6 +84,10 @@
  Requires:          nginx-all-modules = %{epoch}:%{version}-%{release}
  %endif
  
@@ -38,7 +42,7 @@
  Requires:          openssl
  Requires:          pcre
  Requires(pre):     nginx-filesystem
-@@ -170,7 +187,17 @@
+@@ -170,8 +191,22 @@
  
  %prep
  %setup -q
@@ -47,24 +51,21 @@
 +%setup -T -D -a 23
 +%setup -T -D -a 24
 +%setup -T -D -a 25
++%setup -T -D -a 26
 +%setup -T -D -a 27
 +%setup -T -D -a 28
 +%setup -T -D -a 29
++%setup -T -D -a 31
++%setup -T -D -a 32
++%setup -T -D -a 33
  %patch0 -p0
-+%patch1 -p1 -b .orig
-+%patch2 -p1 -b .orig
+ %patch2 -p1
++%patch3 -p1 -b .orig
++%patch4 -p1 -b .orig
  cp %{SOURCE200} %{SOURCE210} %{SOURCE10} %{SOURCE12} .
  
  %if 0%{?rhel} > 0 && 0%{?rhel} < 8
-@@ -212,6 +239,7 @@
-     --with-http_xslt_module=dynamic \
-     --with-http_image_filter_module=dynamic \
-     --with-http_geoip_module=dynamic \
-+    --with-http_slice_module \
-     --with-http_sub_module \
-     --with-http_dav_module \
-     --with-http_flv_module \
-@@ -235,6 +263,14 @@
+@@ -241,6 +276,16 @@
      --with-google_perftools_module \
  %endif
      --with-debug \
@@ -76,23 +77,34 @@
 +    --add-module=%{_builddir}/nginx-%{version}/nginx-module-vts \
 +    --add-module=%{_builddir}/nginx-%{version}/redis2-nginx-module \
 +    --add-module=%{_builddir}/nginx-%{version}/nginx-rtmp-module \
++    --add-module=%{_builddir}/nginx-%{version}/ngx_image_thumb \
++    --add-module=%{_builddir}/nginx-%{version}/nginx-http-rdns \
      --with-cc-opt="%{optflags} $(pcre-config --cflags)" \
-     --with-ld-opt="$RPM_LD_FLAGS -Wl,-E" # so the perl module finds its symbols
- 
-@@ -267,6 +303,8 @@
- 
+     --with-ld-opt="$nginx_ldopts"; then
+   : configure failed
+@@ -281,6 +326,15 @@
  install -p -m 0644 ./nginx.conf \
      %{buildroot}%{_sysconfdir}/nginx
-+install -p -m 0644 %{SOURCE26} \
+ 
++install -p -m 0644 %{SOURCE30} \
 +    %{buildroot}%{_sysconfdir}/nginx
- install -p -m 0644 %{SOURCE100} \
-     %{buildroot}%{_datadir}/nginx/html
- install -p -m 0644 %{SOURCE101} %{SOURCE102} \
-@@ -379,6 +417,7 @@
++
++install -p -m 0644 %{_builddir}/nginx-%{version}/nginx-lua-prometheus/prometheus.lua \
++    %{buildroot}%{_sysconfdir}/nginx
++
++install -p -m 0644 %{_builddir}/nginx-%{version}/nginx-lua-prometheus/prometheus_test.lua \
++    %{buildroot}%{_sysconfdir}/nginx
++
+ rm -f %{buildroot}%{_datadir}/nginx/html/index.html
+ ln -s ../../fedora-testpage/index.html \
+       %{buildroot}%{_datadir}/nginx/html/index.html
+@@ -406,6 +460,9 @@
  %config(noreplace) %{_sysconfdir}/nginx/mime.types.default
  %config(noreplace) %{_sysconfdir}/nginx/nginx.conf
  %config(noreplace) %{_sysconfdir}/nginx/nginx.conf.default
 +%config(noreplace) %{_sysconfdir}/nginx/naxsi_core.rules
++%config(noreplace) %{_sysconfdir}/nginx/prometheus.lua
++%config(noreplace) %{_sysconfdir}/nginx/prometheus_test.lua
  %config(noreplace) %{_sysconfdir}/nginx/scgi_params
  %config(noreplace) %{_sysconfdir}/nginx/scgi_params.default
  %config(noreplace) %{_sysconfdir}/nginx/uwsgi_params
