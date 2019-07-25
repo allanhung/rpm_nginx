@@ -13,7 +13,6 @@ bash /usr/local/src/build/get_dependency.sh
 sed -i -e "s#%ldconfig_scriptlets#%post -p /sbin/ldconfig\n%postun -p /sbin/ldconfig#g" $RPMBUILDROOT/SPECS/luajit.spec
 rpmbuild -bb $RPMBUILDROOT/SPECS/luajit.spec
 rpm -U $RPMBUILDROOT/RPMS/x86_64/luajit-*
-yum install -y gperftools-devel openssl-devel pcre-devel zlib-devel GeoIP-devel gd-devel perl-devel perl-ExtUtils-Embed libxslt-devel lua-devel
 
 # get nginx
 bash /usr/local/src/build/get_nginx.sh

@@ -1,6 +1,6 @@
 --- a/nginx.spec	2019-05-30 13:28:20.000000000 +0000
-+++ b/nginx.spec	2019-07-25 06:44:56.992474000 +0000
-@@ -37,6 +37,19 @@
++++ b/nginx.spec	2019-07-25 09:09:20.596537000 +0000
+@@ -37,6 +37,20 @@
  Source12:          nginx.conf
  Source13:          nginx-upgrade
  Source14:          nginx-upgrade.8
@@ -17,10 +17,11 @@
 +Source31:          nginx-module-vts.tar.gz
 +Source32:          nginx-lua-prometheus.tar.gz
 +Source33:          stream-lua-nginx-module.tar.gz
++Source34:          nginx-upsync-module.tar.gz
  Source102:         nginx-logo.png
  Source103:         404.html
  Source104:         50x.html
-@@ -50,6 +63,10 @@
+@@ -50,6 +64,10 @@
  # downstream patch - changing logs permissions to 664 instead
  # previous 644
  Patch2:            nginx-1.12.1-logs-perm.patch
@@ -31,7 +32,7 @@
  
  BuildRequires:     gcc
  %if 0%{?with_gperftools}
-@@ -67,6 +84,10 @@
+@@ -67,6 +85,10 @@
  Requires:          nginx-all-modules = %{epoch}:%{version}-%{release}
  %endif
  
@@ -42,7 +43,7 @@
  Requires:          openssl
  Requires:          pcre
  Requires(pre):     nginx-filesystem
-@@ -170,8 +191,22 @@
+@@ -170,8 +192,23 @@
  
  %prep
  %setup -q
@@ -58,6 +59,7 @@
 +%setup -T -D -a 31
 +%setup -T -D -a 32
 +%setup -T -D -a 33
++%setup -T -D -a 34
  %patch0 -p0
  %patch2 -p1
 +%patch3 -p1 -b .orig
@@ -65,7 +67,7 @@
  cp %{SOURCE200} %{SOURCE210} %{SOURCE10} %{SOURCE12} .
  
  %if 0%{?rhel} > 0 && 0%{?rhel} < 8
-@@ -241,6 +276,16 @@
+@@ -241,6 +278,17 @@
      --with-google_perftools_module \
  %endif
      --with-debug \
@@ -79,10 +81,11 @@
 +    --add-module=%{_builddir}/nginx-%{version}/nginx-rtmp-module \
 +    --add-module=%{_builddir}/nginx-%{version}/ngx_image_thumb \
 +    --add-module=%{_builddir}/nginx-%{version}/nginx-http-rdns \
++    --add-module=%{_builddir}/nginx-%{version}/nginx-upsync-module \
      --with-cc-opt="%{optflags} $(pcre-config --cflags)" \
      --with-ld-opt="$nginx_ldopts"; then
    : configure failed
-@@ -281,6 +326,15 @@
+@@ -281,6 +329,15 @@
  install -p -m 0644 ./nginx.conf \
      %{buildroot}%{_sysconfdir}/nginx
  
@@ -98,7 +101,7 @@
  rm -f %{buildroot}%{_datadir}/nginx/html/index.html
  ln -s ../../fedora-testpage/index.html \
        %{buildroot}%{_datadir}/nginx/html/index.html
-@@ -406,6 +460,9 @@
+@@ -406,6 +463,9 @@
  %config(noreplace) %{_sysconfdir}/nginx/mime.types.default
  %config(noreplace) %{_sysconfdir}/nginx/nginx.conf
  %config(noreplace) %{_sysconfdir}/nginx/nginx.conf.default

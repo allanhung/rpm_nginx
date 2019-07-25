@@ -70,3 +70,9 @@ export NGXMODVER=0.0.7
 cd /usr/local/src
 git clone -b v${NGXMODVER} https://github.com/openresty/stream-lua-nginx-module
 tar -zcf $RPMBUILDROOT/SOURCES/$NGXMODNAME.tar.gz $NGXMODNAME
+
+export NGXMODNAME=nginx-upsync-module
+export NGXMODVER=2.1.0
+cd /usr/local/src
+git clone -b v${NGXMODVER} https://github.com/weibocom/nginx-upsync-module
+tar -zcf $RPMBUILDROOT/SOURCES/$NGXMODNAME.tar.gz $NGXMODNAME

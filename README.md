@@ -14,6 +14,8 @@ nginx 1.16.0 RPM with addon
  - [nginx-module-vts](https://github.com/vozlt/nginx-module-vts)
  - [nginx-lua-prometheus](https://github.com/knyar/nginx-lua-prometheus)
  - [stream-lua-nginx-module](https://github.com/openresty/stream-lua-nginx-module)
+   - need lua > 5.1
+ - [nginx-upsync-module](https://github.com/weibocom/nginx-upsync-module)
 
 # How to Build
 
